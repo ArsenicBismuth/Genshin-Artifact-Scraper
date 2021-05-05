@@ -1,0 +1,13 @@
+fuzzywuzzy==0.18.0
+numpy==1.19.4
+opencv-python-headless==4.4.0.46
+psycopg2-binary==2.8.6
+python-dotenv==0.15.0
+python-Levenshtein==0.12.0
+SQLAlchemy==1.3.22
+Unidecode==1.1.1
+validators==0.18.1
+matplotlib==3.4.1
+mss==6.1.0
+PyAutoGUI==0.9.52
+tesserocr @ file:///D:/bld/tesserocr_1610555349210/work
