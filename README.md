@@ -6,6 +6,7 @@ Automatically scrape all of your artifacts in Genshin Impact. Features:
 - Regions reinitialization (7 steps).
 - Macro to iterate through artifacts.
 - File handling (using pickle).
+- Manual mode (no macro).
 
 While I've made the program to be very user-friendly and versatile, ultimately the scope is too big for something that's originally started as a personal project.
 
@@ -25,7 +26,7 @@ conda install -c conda-forge tesserocr
 ```
 
 ### Usage
-As Genshin Impact runs on Admin, you need to run this with admin privileges. Otherwise, input events (mouse click) won't be recognized.
+As Genshin Impact runs on Admin, you need to run this with admin privileges. Otherwise, input events (mouse click) won't be recognized. But, you can try the manual mode (no admin required) by replacing `main.py` in this guide to `manual.py` (any item containing `*` symbol doesn't exist on manual mode).
 
 Make sure to run this while in the inventory menu, not in the character selection menu.
 
@@ -36,7 +37,7 @@ python main.py -o
 Recalibrate the coordinates by selecting regions in these order:
 
 1. Colored box area of the artifact.
-2. First 2x2 artifact tiles.
+2. First 2x2 artifact tiles*.
 
 About the selection GUI:
 
@@ -68,7 +69,7 @@ If recalibration isn't successful, initialize the regions by selecting in these 
 4. Artifact level.
 5. All substats & set name.
 6. Artifact colored area.
-7. First 2x2 artifact tiles.
+7. First 2x2 artifact tiles*.
 
 Then start scraping:
 ```
