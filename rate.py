@@ -79,7 +79,7 @@ def parse(text, lang=tr.en(), lang2=art.en()):
                 type = types[extract[0]]
                 continue
                 
-        # Search for type (ex. Goblet)
+        # Search for set (ex. Gladiator)
         # Compare to full dictionary (get best match + confidence)
         if set == None and len(line.replace(' ','')) > 3+2:
             extract = process.extractOne(line, list(sets))
@@ -88,11 +88,13 @@ def parse(text, lang=tr.en(), lang2=art.en()):
             if (extract[1] > 80):
                 print('0', extract[0])
                 set = sets[extract[0]]
-                continue
+                # Prevent reading set description
+                break # Stop loop
         
         # Search for substats & mainstat
         # Compare to full dictionary (get best match + confidence)
-        extract = process.extractOne(line, list(choices))
+        alpha = re.sub("\d+", " ", line)   # Remove numbers
+        extract = process.extractOne(alpha, list(choices))
         # If low confidence, retry with another scorer
         if extract[1] <= 80:
             extract = process.extractOne(line, list(choices), scorer=fuzz.partial_ratio)
@@ -102,12 +104,22 @@ def parse(text, lang=tr.en(), lang2=art.en()):
             print('3', line)
             if (extract[1] > 80):
                 stat = choices[extract[0]]
+                
+            # Remove the stat, thus only value is left
+            line = line.replace(stat.lower(),'')
+            if len(line)>0 and line[0]=='t':
+                line[0] = '+'
+            line = line.replace('t','1').replace('i','1')
+            
             value = reg.findall(line.replace(' ','').replace(',','.'))
             if not value:
+                # Thus this is mainstat
                 if not prev:
+                    # The value is on next line
                     continue
                 print('4', prev)
                 value = prev
+
             value = max(value, key=len)
             if len(value) < 2:
                 continue

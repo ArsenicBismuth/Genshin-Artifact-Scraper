@@ -137,7 +137,7 @@ def ocr(coords, lang=tr.en()):
     for i in range(PARTS):
         # Crop to regions
         crop = img[coords[i][2]:coords[i][3], coords[i][0]:coords[i][1], :]
-        # plt_image=plt.imshow(crop) # Preview post-processing
+        # plt_image=plt.imshow(crop) # Preview cropping
         # plt.show() # Close the window after this
         
         # Unsharp filter
@@ -146,6 +146,8 @@ def ocr(coords, lang=tr.en()):
         
         # Upscale
         crop = cv2.resize(crop, (0, 0), fx=4, fy=4)
+        # Grayscale
+        crop = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
         
         # Pre-process per case
         if i==0:
@@ -154,14 +156,61 @@ def ocr(coords, lang=tr.en()):
             print("Reading mainstat.")
             crop = cv2.resize(crop, (0, 0), fx=2, fy=2)
             crop = cv2.bitwise_not(crop) # Invert            
-            # plt_image=plt.imshow(crop) # Preview post-processing
-            # plt.show() # Close the window after this
+            # plt_image=plt.imshow(crop)
+            # plt.show()
+            
         elif i==2:
             print("Reading mainstat value.")
+            # Downscale. Very important, literally
+            crop = cv2.resize(crop, (0, 0), fx=0.5, fy=0.5)
+            
+            # Auto threshold
+            # crop = cv2.threshold(crop, 0, 255, 
+                # cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]    
+            # Simple threshold, text is distinctly white
+            crop = cv2.threshold(crop, 210, 255, 
+                cv2.THRESH_BINARY)[1]
+                
+            # Thinning the outline
+            kernel = np.ones((3,3),np.uint8)
+            crop = cv2.erode(crop,kernel,iterations = 1)
+            
+            # Remove lines until there's no black spot on top
+            while crop[0].any():
+                crop = crop[1:,:]
+            
+            # Detect text area kernel(y,x) by converting them to blocks
+            kernel = np.ones((crop.shape[0]*2,3),np.uint8)
+            blocks = cv2.dilate(crop,kernel,iterations = 1)
+            black = np.ones((crop.shape[0],32),np.uint8) # Padding
+            
+            # Thicken
+            kernel = np.ones((3,3),np.uint8)
+            crop = cv2.dilate(crop,kernel,iterations = 1)
+            
+            # Find letter end points (white turns black)
+            part = []
+            for x,(i,k) in enumerate(zip(blocks[0][0:], blocks[0][1:])):
+                # k always 1 step further than i
+                if (i,k) == (0,255):  # white -> black
+                    part.append(x)
+            
+            # Slip padding after every number area
+            for i in reversed(part):
+                # Reversely to make sure the index isn't disturbed
+                crop = np.hstack((crop[:,:i], black, crop[:,i:]))
+
+            # Smoothen edges
+            crop = cv2.GaussianBlur(crop, (5,5), 0)
+            # Invert
             crop = cv2.bitwise_not(crop)
+            # plt_image=plt.imshow(crop, cmap='gray')
+            # plt.show()
+            
         elif i==3:
             print("Reading level.")
             crop = cv2.bitwise_not(crop)
+            
         elif i==4:
             print("Reading substats & set name.")
         
@@ -169,8 +218,8 @@ def ocr(coords, lang=tr.en()):
         crop = cv2.copyMakeBorder(crop, 32, 32, 32, 32,
             cv2.BORDER_REPLICATE)
         
-        # plt_image=plt.imshow(crop) # Preview post-processing
-        # plt.show() # Close the window after this
+        # plt_image=plt.imshow(crop)
+        # plt.show()
         
         # OCR per case
         if i==2:
@@ -282,13 +331,16 @@ def main(argv):
             start, delta = mouse()
             np.savetxt(DIR + 'mouse.txt', (start, delta), fmt='%d')
     
+    print(f"\nDelay for 1s before start...\n")
+    sleep(2)
+    
     # Only run on current artifact
     for arg in argv:
         if arg in ("-o", "--once"):
             print("Running once.")
             pc = read(coords)
             pc.print()
-            return
+            return # End program
     
     # Go through the whole menu
     pcs = []            # Compiled pieces
@@ -317,7 +369,7 @@ def main(argv):
         if pg == MENU[2]-1:
             continue
         for i in range(SCROLL):
-            sleep(0.01)
+            sleep(0.002)
             pyautogui.scroll(-1)
         
         # Set pos to start at 2nd row
