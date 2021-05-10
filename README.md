@@ -85,6 +85,11 @@ DIR = "./data/" # Output directory
 MENU = [7,5,2]  # Menu dimension, x,y,page
 SCROLL = 10*MENU[1]-1  # Scroll multiplier for page switch
 ```
+To run debugging mode, use `-d` argument:
+```
+python main.py -d       # Full run + debug
+python main.py -o -d    # Single run + debug
+```
 Also, you may change the stat weight in the `rate.py` file.
 ```
 weights = {lang.hp: 0, lang.atk: 0.5, f'{lang.atk}%': 1, f'{lang.er}%': 0.5, lang.em: 0.5,

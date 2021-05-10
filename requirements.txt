@@ -10,4 +10,4 @@ validators==0.18.1
 matplotlib==3.4.1
 mss==6.1.0
 PyAutoGUI==0.9.52
-tesserocr @ file:///D:/bld/tesserocr_1610555349210/work
+tesserocr

@@ -20,17 +20,23 @@ from time import sleep
 from cv2 import cv2
 
 sct = mss()     # Screenshot
-coords = []     # x1,x2, y1,y2
 PARTS = 5
 
 # Configs
 LANG = tr.en()  # Language setting, placeholder
-DIR = "./data/" # Output directory
+DIR  = "./data/" # Output directory
 
-MENU = [7,5,2]  # Menu dimension, x,y,page
-SCROLL = 10*MENU[1]-1  # Scroll multiplier for page switch
+MENU    = [7,5,2]  # Menu dimension, x,y,page
+SCROLL  = 10*MENU[1]-1  # Scroll multiplier for page switch
+DEBUG   = False # Default logging mode
+SINGLE  = False # Do OCR on single artifact
 
 # General utilities 
+def log(s):
+    # Simple logging
+    if DEBUG:
+        print(s)
+
 def onselect(eclick, erelease):
     # Selecting region using mouse
     if eclick.ydata > erelease.ydata:
@@ -151,16 +157,16 @@ def ocr(coords, lang=tr.en()):
         
         # Pre-process per case
         if i==0:
-            print("Reading artifact type.")
+            log("Reading artifact type.")
         if i==1:
-            print("Reading mainstat.")
+            log("Reading mainstat.")
             crop = cv2.resize(crop, (0, 0), fx=2, fy=2)
             crop = cv2.bitwise_not(crop) # Invert            
             # plt_image=plt.imshow(crop)
             # plt.show()
             
         elif i==2:
-            print("Reading mainstat value.")
+            log("Reading mainstat value.")
             # Downscale. Very important, literally
             crop = cv2.resize(crop, (0, 0), fx=0.5, fy=0.5)
             
@@ -208,11 +214,11 @@ def ocr(coords, lang=tr.en()):
             # plt.show()
             
         elif i==3:
-            print("Reading level.")
+            log("Reading level.")
             crop = cv2.bitwise_not(crop)
             
         elif i==4:
-            print("Reading substats & set name.")
+            log("Reading substats & set name.")
         
         # Padding, improve accuracy significantly
         crop = cv2.copyMakeBorder(crop, 32, 32, 32, 32,
@@ -237,8 +243,7 @@ def ocr(coords, lang=tr.en()):
         texts += text
         
         # text = tesserocr.image_to_text()
-
-        print("########## RAW-"+str(i)+":\n", text, "\n")
+        log("########## RAW-"+str(i)+":\n"+ text +"\n")
     
     return texts
     
@@ -276,7 +281,7 @@ def admin():
     if status:
         return status
     else:
-        input("Please run as administrator.\n" +
+        print("Please run as administrator for macro to work.\n" +
             "This is required because Genshin runs as admin.")
         # Re-run the program with admin rights
         # ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__.join(sys.argv), None, 1)
@@ -305,8 +310,9 @@ def main(argv):
 
     print("Admin:", admin()) # Check for admin privileges
     # This is necessary as Genshin runs with admin privileges
-    # No external program can work on a window without equal privileges
+    # Macro can't work on a window without equal privileges
 
+    coords = []     # x1,x2, y1,y2
     # Ask to load prior settings
     if input("Load coordinates? ([y]/n): ") == 'n':
         # Start setting multiple crop regions
@@ -331,16 +337,25 @@ def main(argv):
             start, delta = mouse()
             np.savetxt(DIR + 'mouse.txt', (start, delta), fmt='%d')
     
-    print(f"\nDelay for 1s before start...\n")
+    print(f"\nDelay for 1s before start...")
     sleep(2)
     
     # Only run on current artifact
     for arg in argv:
-        if arg in ("-o", "--once"):
-            print("Running once.")
-            pc = read(coords)
-            pc.print()
-            return # End program
+        if arg in ("-d", "--debug"):
+            # Show raw OCR data
+            global DEBUG
+            DEBUG = True
+        elif arg in ("-o", "--once"):
+            SINGLE = True
+    
+    if SINGLE:
+        print("Single run.\n")
+        pc = read(coords)
+        pc.print()
+        return # End program
+    
+    print("Full run.\n")
     
     # Go through the whole menu
     pcs = []            # Compiled pieces
