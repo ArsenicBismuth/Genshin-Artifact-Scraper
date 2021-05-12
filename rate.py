@@ -107,9 +107,6 @@ def parse(text, lang=tr.en(), lang2=art.en()):
                 
             # Remove the stat, thus only value is left
             line = line.replace(stat.lower(),'').replace(' ','')
-            if len(line)>0 and line[0]=='t':
-                line.replace('t','+',1)
-            line = line.replace('t','1').replace('i','1')
             
             value = reg.findall(line.replace(' ','').replace(',','.'))
             if not value:

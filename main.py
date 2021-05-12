@@ -26,7 +26,7 @@ PARTS = 5
 LANG = tr.en()  # Language setting, placeholder
 DIR  = "./data/" # Output directory
 
-MENU    = [7,5,2]  # Menu dimension, x,y,page
+MENU    = [7,5,5]  # Menu dimension, x,y,page
 SCROLL  = 10*MENU[1]-1  # Scroll multiplier for page switch
 DEBUG   = False # Default logging mode
 SINGLE  = False # Do OCR on single artifact
@@ -347,6 +347,7 @@ def main(argv):
             global DEBUG
             DEBUG = True
         elif arg in ("-o", "--once"):
+            global SINGLE
             SINGLE = True
     
     if SINGLE:
