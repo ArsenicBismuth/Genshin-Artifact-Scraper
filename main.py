@@ -8,7 +8,7 @@ from PIL import Image
 from mss import mss
 import matplotlib.pyplot as plt
 import matplotlib.widgets as widgets
-from tesserocr import PyTessBaseAPI
+from tesserocr import PyTessBaseAPI, PSM
 import pickle
 import csv
 
@@ -168,7 +168,8 @@ def ocr(coords, lang=tr.en()):
         elif i==2:
             log("Reading mainstat value.")
             # Downscale. Very important, literally
-            crop = cv2.resize(crop, (0, 0), fx=0.5, fy=0.5)
+            ratio = 1
+            crop = cv2.resize(crop, (0, 0), fx=ratio/2, fy=ratio/2)
             
             # Auto threshold
             # crop = cv2.threshold(crop, 0, 255, 
@@ -196,15 +197,15 @@ def ocr(coords, lang=tr.en()):
             
             # Find letter end points (white turns black)
             part = []
-            for x,(i,k) in enumerate(zip(blocks[0][0:], blocks[0][1:])):
-                # k always 1 step further than i
-                if (i,k) == (0,255):  # white -> black
+            for x,(j,k) in enumerate(zip(blocks[0][0:], blocks[0][1:])):
+                # k always 1 step further than j
+                if (j,k) == (0,255):  # white -> black
                     part.append(x)
             
             # Slip padding after every number area
-            for i in reversed(part):
+            for j in reversed(part):
                 # Reversely to make sure the index isn't disturbed
-                crop = np.hstack((crop[:,:i], black, crop[:,i:]))
+                crop = np.hstack((crop[:,:j], black, crop[:,j:]))
 
             # Smoothen edges
             crop = cv2.GaussianBlur(crop, (5,5), 0)
@@ -230,11 +231,20 @@ def ocr(coords, lang=tr.en()):
         # OCR per case
         if i==2:
             # Mainstat value
-            text = to_text(crop, ".,1234567890%m")
+            text = to_text(crop, ".,1234567890%m/vV")
             text = text.replace("m", "11")
+            text = text.replace("/", "7")
+            text = text.replace("V", "71")
+            text = text.replace("v", "71")
+            text = text.replace("417", "717")
         elif i==3:
             # Level
             text = to_text(crop, "+1234567890")
+        elif i==4:
+            # Substats
+            text = to_text(crop)
+            text = text.replace("/", "7")
+            text = text.replace("1l", "11")
         else:
             # Execute normal OCR
             text = to_text(crop)
@@ -243,18 +253,25 @@ def ocr(coords, lang=tr.en()):
         texts += text
         
         # text = tesserocr.image_to_text()
-        log("########## RAW-"+str(i)+":\n"+ text +"\n")
+        log("########## RAW-"+str(i)+":\n"+ text)
     
     return texts
     
-def to_text(image, whitelist=""):
+def to_text(image, whitelist="", psm=PSM.SINGLE_BLOCK):
     img = Image.fromarray(np.uint8(image))
     
-    with PyTessBaseAPI() as api:
+    with PyTessBaseAPI(psm=psm) as api:
         api.SetVariable('tessedit_char_whitelist', whitelist)
         api.SetImage(img)
         return api.GetUTF8Text()  # it will print only digits
     # API is automatically finalized when used in a with-statement
+    
+    # To read the list of PSM, do:
+    # import tesserocr
+    # print(tesserocr.PSM.__doc__)
+    
+    # General docstring:
+    # print(PyTessBaseAPI.__doc__)
     
 # Macro procedures
 def mouse():
@@ -337,7 +354,8 @@ def main(argv):
             start, delta = mouse()
             np.savetxt(DIR + 'mouse.txt', (start, delta), fmt='%d')
     
-    print(f"\nDelay for 1s before start...")
+    print(f"\nPlease switch to your Genshin window.")
+    print(f"Delay for 1s before start...")
     sleep(2)
     
     # Only run on current artifact

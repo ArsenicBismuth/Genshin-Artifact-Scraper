@@ -1,3 +1,4 @@
+
 # Genshin Artifact Scraper
 Automatically scrape all of your artifacts in Genshin Impact. Features:
 
@@ -30,10 +31,16 @@ As Genshin Impact runs on Admin, you need to run this with admin privileges. Oth
 
 Make sure to run this while in the inventory menu, not in the character selection menu.
 
-Try to run once to calibrate:
+Try to run below to calibrate, and answer "y" on all:
 ```
 python main.py -o
 ```
+```
+Load coordinates? ([y]/n): y
+Recalibrate OCR? (y/[n]): y
+Recalibrate mouse? (y/[n]): y
+```
+
 Recalibrate the coordinates by selecting regions in these order:
 
 1. Colored box area of the artifact.
@@ -96,3 +103,12 @@ weights = {lang.hp: 0, lang.atk: 0.5, f'{lang.atk}%': 1, f'{lang.er}%': 0.5, lan
                f'{lang.phys}%': 1, f'{lang.cr}%': 1, f'{lang.cd}%': 1, f'{lang.elem}%': 1,
                f'{lang.hp}%': 0, f'{lang.df}%': 0, lang.df: 0, f'{lang.heal}%': 0}
 ```
+### Compatibility
+Program is tested to be working perfectly on:
+
+- 1920x1080 monitor, 1600x900 Genshin (windowed).
+- 1920x1080 monitor, 1366x768 Genshin (windowed).
+
+By default, this repository is set to the first configuration (thus you can fully avoid any recalibration with those resolutions).
+
+Please let me know if you can confirm it on another resolutions.
